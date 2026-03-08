@@ -1,0 +1,69 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  mobile        String?    @unique
+  email         String?    @unique
+  address       String?
+  role          String     @default("USER") // ADMIN, OPERATOR_PARTNER, FRANCHISE_PARTNER, USER
+  status        String     @default("ACTIVE")
+  idCode        String?    @unique
+  password      String?    // For Admin
+  bookings      Booking[]
+  membership    Membership?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model Booking {
+  id              String   @id @default(cuid())
+  customerName    String
+  mobile          String
+  address         String
+  vehicleType     String   // CAR, BIKE
+  vehicleNumber   String
+  washType        String?  // Normal, Single Foam, Double Foam, Deep Cleaning, etc.
+  date            DateTime
+  slot            String
+  status          String   @default("PENDING") // PENDING, SUCCESS, FAILED
+  otp             String
+  paymentStatus   String   @default("PENDING")
+  paymentId       String?
+  amount          Float
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id])
+  operatorId      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Membership {
+  id            String   @id @default(cuid())
+  type          String   // BIKE_PRIME, CAR_PRIME
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id])
+  validUntil    DateTime
+  washesUsed    Int      @default(0)
+  totalWashes   Int
+  createdAt     DateTime @default(now())
+}
+
+model Partner {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  type          String   // OPERATOR, FRANCHISE
+  revenueShare  Float    // e.g., 0.6 for 60%
+  totalRevenue  Float    @default(0)
+  createdAt     DateTime @default(now())
+}
